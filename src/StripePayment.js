@@ -45,6 +45,20 @@ export default class StripePayment extends BasePayment {
   }
 
   /**
+   * Charge a credit card via Stripe token
+   * @param {String} _token The Stripe token
+   * @param {String} _options Additional options
+   */
+  
+  charge(_options) {
+    return new Promise(() => {
+      this.getProvider().charges.create(_options, (err, res) => (
+        error ? reject(err) : resolve(res)
+      ));
+    });
+  }
+
+  /**
    * Retrieve information about transaction
    * @param {String} _transactionId
    * @returns {Promise}
