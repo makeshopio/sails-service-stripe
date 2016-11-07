@@ -1,5 +1,5 @@
 {
-  "name": "sails-service-payment",
+  "name": "sails-service-stripe",
   "version": "0.0.0-semantic-release",
   "description": "Service for Sails framework with Payment features",
   "main": "lib/index.js",
@@ -12,19 +12,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ghaiklor/sails-service-payment.git"
+    "url": "https://github.com/aarondancer/sails-service-stripe.git"
   },
   "keywords": [
     "sails",
     "service",
-    "payment"
+    "payment",
+    "stripe"
   ],
-  "author": "ghaiklor",
+  "authors": ["ghaiklor", "aarondancer" ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ghaiklor/sails-service-payment/issues"
+    "url": "https://github.com/aarondancer/sails-service-stripe/issues"
   },
-  "homepage": "https://github.com/ghaiklor/sails-service-payment#readme",
+  "homepage": "https://github.com/aarondancer/sails-service-stripe#readme",
   "dependencies": {
     "braintree": "1.42.0",
     "lodash": "^4.16.5",
