@@ -117,9 +117,12 @@ export default class StripePayment extends BasePayment {
    * @param {String} _options Additional options
    */
   
-  charge(_options) {
+  charge(_token, _config) {
+    let config = _.merge({
+      source: _token
+    }, _config)
     return new Promise(() => {
-      this.getProvider().charges.create(_options, (err, res) => (
+      this.getProvider().charges.create(_config, (err, res) => (
         error ? reject(err) : resolve(res)
       ));
     });
