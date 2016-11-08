@@ -1,6 +1,5 @@
 {
   "name": "sails-service-stripe",
-  "version": "0.0.0-semantic-release",
   "description": "Service for Sails framework with Payment features",
   "main": "lib/index.js",
   "scripts": {
@@ -20,7 +19,10 @@
     "payment",
     "stripe"
   ],
-  "authors": ["ghaiklor", "aarondancer" ],
+  "authors": [
+    "ghaiklor",
+    "aarondancer"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/aarondancer/sails-service-stripe/issues"
@@ -39,7 +41,7 @@
     "cz-conventional-changelog": "1.2.0",
     "isparta": "4.0.0",
     "mocha": "3.1.2",
-    "semantic-release": "4.3.5",
+    "semantic-release": "^4.3.5",
     "sinon": "1.17.6"
   },
   "config": {
