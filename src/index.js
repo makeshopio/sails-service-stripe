@@ -1,8 +1,6 @@
-import BrainTreePayment from './BrainTreePayment';
 import StripePayment from './StripePayment';
 
 const payment = {
-  braintree: BrainTreePayment,
   stripe: StripePayment
 };
 

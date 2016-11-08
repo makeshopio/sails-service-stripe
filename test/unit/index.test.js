@@ -1,6 +1,5 @@
 import { assert } from 'chai';
 import PaymentService from '../../src/index';
-import BrainTreePayment from '../../src/BrainTreePayment';
 import StripePayment from '../../src/StripePayment';
 
 describe('PaymentService', () => {
@@ -8,8 +7,7 @@ describe('PaymentService', () => {
     assert.isFunction(PaymentService);
   });
 
-  it('Should properly create instances', () => {
-    assert.instanceOf(PaymentService('braintree', {}), BrainTreePayment);
+  it('Should properly create instance', () => {
     assert.instanceOf(PaymentService('stripe', {}), StripePayment);
   });
 

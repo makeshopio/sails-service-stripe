@@ -1,23 +1,9 @@
-# sails-service-payment
-
-![Build Status](https://img.shields.io/travis/ghaiklor/sails-service-payment.svg)
-![Coverage](https://img.shields.io/coveralls/ghaiklor/sails-service-payment.svg)
-
-![Downloads](https://img.shields.io/npm/dm/sails-service-payment.svg)
-![Downloads](https://img.shields.io/npm/dt/sails-service-payment.svg)
-![npm version](https://img.shields.io/npm/v/sails-service-payment.svg)
-![License](https://img.shields.io/npm/l/sails-service-payment.svg)
-
-[![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
-[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
-![dependencies](https://img.shields.io/david/ghaiklor/sails-service-payment.svg)
-![dev dependencies](https://img.shields.io/david/dev/ghaiklor/sails-service-payment.svg)
+# sails-service-stripe
 
 Service for Sails framework with Payment features.
 
 ## List of supported payment systems
 
-- BrainTreePayments ([docs](https://developers.braintreepayments.com/javascript+node/reference/overview))
 - Stripe ([docs](https://stripe.com/docs/api/node))
 
 ## Getting Started
@@ -25,14 +11,14 @@ Service for Sails framework with Payment features.
 Install this module.
 
 ```shell
-npm install sails-service-payment
+npm install sails-service-stripe
 ```
 
 Then require it in your service and create payment instance.
 
 ```javascript
 // api/services/PaymentService.js
-import PaymentService from 'sails-service-payment';
+import PaymentService from 'sails-service-stripe';
 
 export default PaymentService('stripe', {
   apiKey: '<STRIPE_API_KEY>'
@@ -87,29 +73,6 @@ Refund already settled transaction. Returns Promise.
 `transactionId` - ID of settled transaction. You can get it from `checkout` result.
 
 ## Examples
-
-### BrainTreePayment
-
-```javascript
-let brainTree = PaymentService('braintree', {
-  sandbox: true, // Set to false if you're going to live
-  merchantId: '', // Your credentials from BrainTree dashboard
-  publicKey: '', // Your credentials from BrainTree dashboard
-  privateKey: '' // Your credentials from BrainTree dashboard
-});
-
-brainTree
-  .checkout({
-    amount: 100 * 10, // $10
-    cardNumber: '4242424242424242',
-    cardHolderName: 'Eugene Obrezkov',
-    expMonth: '01',
-    expYear: '2018',
-    cvv: '123'
-  })
-  .then(console.log.bind(console))
-  .catch(console.error.bind(console));
-```
 
 ### StripePayment
 
