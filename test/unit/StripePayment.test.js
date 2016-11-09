@@ -42,13 +42,19 @@ const CUSTOMER = {
   source: CHECKOUT_CONFIG_SHOULD_BE.source
 }
 
+const newProvider = () => (new StripePayment(PROVIDER_CONFIG));
+
 describe('StripePayment', () => {
   it('Should properly export StripePayment', () => {
     assert.isFunction(StripePayment);
   });
 
+  it('Should properly create credit card token', done = {
+    let payment = newProvider();
+  });
+
   it('Should properly charge', done => {
-    let payment = new StripePayment(PROVIDER_CONFIG);
+    let payment = newProvider();
 
     sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb(null, 'CHARGE'));
 
@@ -68,7 +74,7 @@ describe('StripePayment', () => {
   });
 
   it('Should properly throw exception on charge', done => {
-    let payment = new StripePayment(PROVIDER_CONFIG);
+    let payment = newProvider();
 
     sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb(new Error('Some error occurred')));
 
@@ -88,7 +94,7 @@ describe('StripePayment', () => {
   });
 
   it('Should properly conduct charge with extended properties', done => {
-    let payment = new StripePayment(PROVIDER_CONFIG);
+    let payment = newProvider();
 
     sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb());
 
@@ -107,7 +113,7 @@ describe('StripePayment', () => {
   });
 
   // it('Should properly subscribe customer to plan', done => {
-  //   let payment = new StripePayment(PROVIDER_CONFIG);
+  //   let payment = newProvider();
 
   //   sinon.stub(payment.getProvider().subscribe, 'create', (config, cb) => cb(null, 'SUBSCRIBE'));
 
@@ -127,7 +133,7 @@ describe('StripePayment', () => {
   // });
 
   it('Should properly retrieve info about transaction', done => {
-    let payment = new StripePayment(PROVIDER_CONFIG);
+    let payment = newProvider();
 
     sinon.stub(payment.getProvider().charges, 'retrieve', (transactionId, cb) => cb(null, 'TRANSACTION'));
 
@@ -147,7 +153,7 @@ describe('StripePayment', () => {
   });
 
   it('Should properly throw exception on getting info about transaction', done => {
-    let payment = new StripePayment(PROVIDER_CONFIG);
+    let payment = newProvider();
 
     sinon.stub(payment.getProvider().charges, 'retrieve', (transactionId, cb) => cb(new Error('Some error occurred')));
 
@@ -167,7 +173,7 @@ describe('StripePayment', () => {
   });
 
   it('Should properly call refund method', done => {
-    let payment = new StripePayment(PROVIDER_CONFIG);
+    let payment = newProvider();
 
     sinon.stub(payment.getProvider().refunds, 'create', (config, cb) => cb(null, 'REFUND'));
 
@@ -187,7 +193,7 @@ describe('StripePayment', () => {
   });
 
   it('Should properly throw exception on refund', done => {
-    let payment = new StripePayment(PROVIDER_CONFIG);
+    let payment = newProvider();
 
     sinon.stub(payment.getProvider().refunds, 'create', (config, cb) => cb(new Error('Some error occurred')));
 
