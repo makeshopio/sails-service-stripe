@@ -11,6 +11,7 @@ const NAME = 'Aaron Dancer';
 const EMAIL = 'me@aarondancer.com';
 const CURRENCY = 'usd';
 const TOKEN = 'tok_189faG2eZvKYlo2CT5j1rPJk';
+const PLAN = 'basic';
 
 const CREDIT_CARD = {
   amount: AMOUNT,
@@ -59,6 +60,15 @@ const CUSTOMER = {
   source: TOKEN
 }
 
+const CUSTOMER_ID = 'cus_9X7bHbX7b04a9p';
+
+const SUBSCRIBE_CONFIG_SHOULD_BE = {
+  customer: CUSTOMER_ID,
+  plan: PLAN
+}
+
+const SUBSCRIPTION = 'sub_9X7buJkuihMLUS';
+
 const newProvider = () => (new StripePayment(PROVIDER_CONFIG));
 
 describe('StripePayment', () => {
@@ -68,21 +78,22 @@ describe('StripePayment', () => {
 
   it('Should properly create credit card token', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().tokens, 'create', (config, cb) => cb(null, 'TOKEN'));
+    sinon.stub(provider.tokens, 'create', (config, cb) => cb(null, 'TOKEN'));
     sinon.spy(payment, 'createToken');
 
     payment
       .createCardToken(CREDIT_CARD)
       .then(token => {
         assert.equal(token, 'TOKEN');
-        assert(payment.getProvider().tokens.create.calledOnce);
+        assert(provider.tokens.create.calledOnce);
         assert.isFunction(payment.createToken);
         assert(payment.createToken.calledOnce);
-        assert.deepEqual(payment.getProvider().tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
-        assert.isFunction(payment.getProvider().tokens.create.getCall(0).args[1]);
+        assert.deepEqual(provider.tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
+        assert.isFunction(provider.tokens.create.getCall(0).args[1]);
 
-        payment.getProvider().tokens.create.restore();
+        provider.tokens.create.restore();
 
         done();
       })
@@ -91,8 +102,9 @@ describe('StripePayment', () => {
 
   it('Should properly throw exception on credit card token create', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().tokens, 'create', (config, cb) => cb(new Error('Some error occurred')));
+    sinon.stub(provider.tokens, 'create', (config, cb) => cb(new Error('Some error occurred')));
     sinon.spy(payment, 'createToken');
 
     payment
@@ -100,13 +112,13 @@ describe('StripePayment', () => {
       .then(done)
       .catch(error => {
         assert.instanceOf(error, Error);
-        assert(payment.getProvider().tokens.create.calledOnce);
+        assert(provider.tokens.create.calledOnce);
         assert.isFunction(payment.createToken);
         assert(payment.createToken.calledOnce);
-        assert.deepEqual(payment.getProvider().tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
-        assert.isFunction(payment.getProvider().tokens.create.getCall(0).args[1]);
+        assert.deepEqual(provider.tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
+        assert.isFunction(provider.tokens.create.getCall(0).args[1]);
 
-        payment.getProvider().tokens.create.restore();
+        provider.tokens.create.restore();
 
         done();
       });
@@ -114,21 +126,22 @@ describe('StripePayment', () => {
 
   it('Should properly create bank account token', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().tokens, 'create', (config, cb) => cb(null, 'TOKEN'));
+    sinon.stub(provider.tokens, 'create', (config, cb) => cb(null, 'TOKEN'));
     sinon.spy(payment, 'createToken')
 
     payment
       .createBankAccountToken(BANK_ACCOUNT)
       .then(token => {
         assert.equal(token, 'TOKEN');
-        assert(payment.getProvider().tokens.create.calledOnce);
+        assert(provider.tokens.create.calledOnce);
         assert.isFunction(payment.createToken);
         assert(payment.createToken.calledOnce);
-        assert.deepEqual(payment.getProvider().tokens.create.getCall(0).args[0], TOKEN_BANK_ACCOUNT_CONFIG_SHOULD_BE);
-        assert.isFunction(payment.getProvider().tokens.create.getCall(0).args[1]);
+        assert.deepEqual(provider.tokens.create.getCall(0).args[0], TOKEN_BANK_ACCOUNT_CONFIG_SHOULD_BE);
+        assert.isFunction(provider.tokens.create.getCall(0).args[1]);
 
-        payment.getProvider().tokens.create.restore();
+        provider.tokens.create.restore();
 
         done();
       })
@@ -137,8 +150,9 @@ describe('StripePayment', () => {
 
   it('Should properly throw exception on bank account token create', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().tokens, 'create', (config, cb) => cb(new Error('Some error occurred')));
+    sinon.stub(provider.tokens, 'create', (config, cb) => cb(new Error('Some error occurred')));
     sinon.spy(payment, 'createToken');
 
     payment
@@ -146,13 +160,13 @@ describe('StripePayment', () => {
       .then(done)
       .catch(error => {
         assert.instanceOf(error, Error);
-        assert(payment.getProvider().tokens.create.calledOnce);
+        assert(provider.tokens.create.calledOnce);
         assert.isFunction(payment.createToken);
         assert(payment.createToken.calledOnce);
-        assert.deepEqual(payment.getProvider().tokens.create.getCall(0).args[0], TOKEN_BANK_ACCOUNT_CONFIG_SHOULD_BE);
-        assert.isFunction(payment.getProvider().tokens.create.getCall(0).args[1]);
+        assert.deepEqual(provider.tokens.create.getCall(0).args[0], TOKEN_BANK_ACCOUNT_CONFIG_SHOULD_BE);
+        assert.isFunction(provider.tokens.create.getCall(0).args[1]);
 
-        payment.getProvider().tokens.create.restore();
+        provider.tokens.create.restore();
 
         done();
       });
@@ -160,18 +174,19 @@ describe('StripePayment', () => {
 
   it('Should properly get token info', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().tokens, 'retrieve', (config, cb) => cb(null, 'TOKEN'));
+    sinon.stub(provider.tokens, 'retrieve', (config, cb) => cb(null, 'TOKEN'));
 
     payment
       .getToken(TOKEN)
       .then(token => {
         assert.equal(token, 'TOKEN');
-        assert(payment.getProvider().tokens.retrieve.calledOnce);
-        assert.deepEqual(payment.getProvider().tokens.retrieve.getCall(0).args[0], TOKEN);
-        assert.isFunction(payment.getProvider().tokens.retrieve.getCall(0).args[1]);
+        assert(provider.tokens.retrieve.calledOnce);
+        assert.deepEqual(provider.tokens.retrieve.getCall(0).args[0], TOKEN);
+        assert.isFunction(provider.tokens.retrieve.getCall(0).args[1]);
 
-        payment.getProvider().tokens.retrieve.restore();
+        provider.tokens.retrieve.restore();
 
         done();
       })
@@ -180,19 +195,20 @@ describe('StripePayment', () => {
 
   it('Should properly thow exception when trying to get token info', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().tokens, 'retrieve', (config, cb) => cb(new Error('Some error occurred')));
+    sinon.stub(provider.tokens, 'retrieve', (config, cb) => cb(new Error('Some error occurred')));
 
     payment
       .getToken(TOKEN)
       .then(done)
       .catch(error => {
         assert.instanceOf(error, Error);
-        assert(payment.getProvider().tokens.retrieve.calledOnce);
-        assert.deepEqual(payment.getProvider().tokens.retrieve.getCall(0).args[0], TOKEN);
-        assert.isFunction(payment.getProvider().tokens.retrieve.getCall(0).args[1]);
+        assert(provider.tokens.retrieve.calledOnce);
+        assert.deepEqual(provider.tokens.retrieve.getCall(0).args[0], TOKEN);
+        assert.isFunction(provider.tokens.retrieve.getCall(0).args[1]);
 
-        payment.getProvider().tokens.retrieve.restore();
+        provider.tokens.retrieve.restore();
 
         done();
       })
@@ -200,18 +216,19 @@ describe('StripePayment', () => {
 
   it('Should properly charge', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb(null, 'CHARGE'));
+    sinon.stub(provider.charges, 'create', (config, cb) => cb(null, 'CHARGE'));
 
     payment
       .charge(TOKEN, AMOUNT, {})
       .then(charge => {
         assert.equal(charge, 'CHARGE');
-        assert(payment.getProvider().charges.create.calledOnce);
-        assert.deepEqual(payment.getProvider().charges.create.getCall(0).args[0], CHECKOUT_CONFIG_SHOULD_BE);
-        assert.isFunction(payment.getProvider().charges.create.getCall(0).args[1]);
+        assert(provider.charges.create.calledOnce);
+        assert.deepEqual(provider.charges.create.getCall(0).args[0], CHECKOUT_CONFIG_SHOULD_BE);
+        assert.isFunction(provider.charges.create.getCall(0).args[1]);
 
-        payment.getProvider().charges.create.restore();
+        provider.charges.create.restore();
 
         done();
       })
@@ -220,19 +237,20 @@ describe('StripePayment', () => {
 
   it('Should properly throw exception on charge', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb(new Error('Some error occurred')));
+    sinon.stub(provider.charges, 'create', (config, cb) => cb(new Error('Some error occurred')));
 
     payment
       .charge(TOKEN, AMOUNT, {})
       .then(done)
       .catch(error => {
         assert.instanceOf(error, Error);
-        assert(payment.getProvider().charges.create.calledOnce);
-        assert.deepEqual(payment.getProvider().charges.create.getCall(0).args[0], CHECKOUT_CONFIG_SHOULD_BE);
-        assert.isFunction(payment.getProvider().charges.create.getCall(0).args[1]);
+        assert(provider.charges.create.calledOnce);
+        assert.deepEqual(provider.charges.create.getCall(0).args[0], CHECKOUT_CONFIG_SHOULD_BE);
+        assert.isFunction(provider.charges.create.getCall(0).args[1]);
 
-        payment.getProvider().charges.create.restore();
+        provider.charges.create.restore();
 
         done();
       });
@@ -240,17 +258,18 @@ describe('StripePayment', () => {
 
   it('Should properly conduct charge with extended properties', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb());
+    sinon.stub(provider.charges, 'create', (config, cb) => cb());
 
     payment
       .charge(TOKEN, AMOUNT, {receipt_email: EMAIL})
       .then(() => {
-        assert(payment.getProvider().charges.create.calledOnce);
-        assert.deepEqual(payment.getProvider().charges.create.getCall(0).args[0], CHECKOUT_CONFIG_EXTENDED_SHOULD_BE);
-        assert.isFunction(payment.getProvider().charges.create.getCall(0).args[1]);
+        assert(provider.charges.create.calledOnce);
+        assert.deepEqual(provider.charges.create.getCall(0).args[0], CHECKOUT_CONFIG_EXTENDED_SHOULD_BE);
+        assert.isFunction(provider.charges.create.getCall(0).args[1]);
 
-        payment.getProvider().charges.create.restore();
+        provider.charges.create.restore();
 
         done();
       })
@@ -259,23 +278,24 @@ describe('StripePayment', () => {
 
   it('Should properly charge credit card with raw info', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb(null, 'CHARGE'));
-    sinon.stub(payment.getProvider().tokens, 'create', (config, cb) => cb(null, { id: TOKEN }));
+    sinon.stub(provider.charges, 'create', (config, cb) => cb(null, 'CHARGE'));
+    sinon.stub(provider.tokens, 'create', (config, cb) => cb(null, { id: TOKEN }));
 
     payment
       .chargeCard(CREDIT_CARD, AMOUNT, {})
       .then(charge => {
         assert.equal(charge, 'CHARGE');
-        assert(payment.getProvider().charges.create.calledOnce);
-        assert(payment.getProvider().tokens.create.calledOnce);
-        assert.deepEqual(payment.getProvider().charges.create.getCall(0).args[0], CHECKOUT_CONFIG_SHOULD_BE);
-        assert.isFunction(payment.getProvider().charges.create.getCall(0).args[1]);
-        assert.deepEqual(payment.getProvider().tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
-        assert.isFunction(payment.getProvider().tokens.create.getCall(0).args[1]);
+        assert(provider.charges.create.calledOnce);
+        assert(provider.tokens.create.calledOnce);
+        assert.deepEqual(provider.charges.create.getCall(0).args[0], CHECKOUT_CONFIG_SHOULD_BE);
+        assert.isFunction(provider.charges.create.getCall(0).args[1]);
+        assert.deepEqual(provider.tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
+        assert.isFunction(provider.tokens.create.getCall(0).args[1]);
 
-        payment.getProvider().tokens.create.restore();
-        payment.getProvider().charges.create.restore();
+        provider.tokens.create.restore();
+        provider.charges.create.restore();
 
         done();
       })
@@ -284,22 +304,23 @@ describe('StripePayment', () => {
 
   it('Should throw when charging credit card with invalid raw info', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb(null, 'CHARGE'));
-    sinon.stub(payment.getProvider().tokens, 'create', (config, cb) => cb(new Error('Credit card invalid')));
+    sinon.stub(provider.charges, 'create', (config, cb) => cb(null, 'CHARGE'));
+    sinon.stub(provider.tokens, 'create', (config, cb) => cb(new Error('Credit card invalid')));
 
     payment
       .chargeCard(CREDIT_CARD, AMOUNT, {})
       .then(done)
       .catch(error => {
         assert.instanceOf(error, Error);
-        assert(payment.getProvider().charges.create.neverCalledWith());
-        assert(payment.getProvider().tokens.create.calledOnce);
-        assert.deepEqual(payment.getProvider().tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
-        assert.isFunction(payment.getProvider().tokens.create.getCall(0).args[1]);
+        assert(provider.charges.create.neverCalledWith());
+        assert(provider.tokens.create.calledOnce);
+        assert.deepEqual(provider.tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
+        assert.isFunction(provider.tokens.create.getCall(0).args[1]);
 
-        payment.getProvider().tokens.create.restore();
-        payment.getProvider().charges.create.restore();
+        provider.tokens.create.restore();
+        provider.charges.create.restore();
 
         done();
       });
@@ -307,9 +328,10 @@ describe('StripePayment', () => {
 
   it('Should throw when charging credit card with token info', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb(new Error('Token id does not exist')));
-    sinon.stub(payment.getProvider().tokens, 'create', (config, cb) => cb(null, { id: TOKEN }));
+    sinon.stub(provider.charges, 'create', (config, cb) => cb(new Error('Token id does not exist')));
+    sinon.stub(provider.tokens, 'create', (config, cb) => cb(null, { id: TOKEN }));
 
     payment
       .chargeCard(CREDIT_CARD, AMOUNT, {})
@@ -317,53 +339,77 @@ describe('StripePayment', () => {
       .catch(error => {
         assert.instanceOf(error, Error);
 
-        assert(payment.getProvider().charges.create.calledOnce);
-        assert(payment.getProvider().tokens.create.calledOnce);
+        assert(provider.charges.create.calledOnce);
+        assert(provider.tokens.create.calledOnce);
 
-        assert.deepEqual(payment.getProvider().tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
-        assert.isFunction(payment.getProvider().tokens.create.getCall(0).args[1]);
+        assert.deepEqual(provider.tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
+        assert.isFunction(provider.tokens.create.getCall(0).args[1]);
 
-        payment.getProvider().tokens.create.restore();
-        payment.getProvider().charges.create.restore();
+        provider.tokens.create.restore();
+        provider.charges.create.restore();
 
         done();
       });
   });
 
-  // it('Should properly subscribe customer to plan', done => {
-  //   let payment = newProvider();
+  it('Should properly subscribe customer to plan', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
 
-  //   sinon.stub(payment.getProvider().subscribe, 'create', (config, cb) => cb(null, 'SUBSCRIBE'));
+    sinon.stub(provider.subscriptions, 'create', (config, cb) => cb(null, 'SUBSCRIBED'));
 
-  //   payment
-  //     .subscribe(CREDIT_CARD)
-  //     .then(charge => {
-  //       assert.equal(charge, 'CHARGE');
-  //       assert(payment.getProvider().charges.create.calledOnce);
-  //       assert.deepEqual(payment.getProvider().charges.create.getCall(0).args[0], CHECKOUT_CONFIG_SHOULD_BE);
-  //       assert.isFunction(payment.getProvider().charges.create.getCall(0).args[1]);
+    payment
+      .subscribe(CUSTOMER_ID, PLAN, {})
+      .then(subscription => {
+        assert.equal(subscription, 'SUBSCRIBED');
+        assert(provider.subscriptions.create.calledOnce);
+        assert.deepEqual(provider.subscriptions.create.getCall(0).args[0], SUBSCRIBE_CONFIG_SHOULD_BE);
+        assert.isFunction(provider.subscriptions.create.getCall(0).args[1]);
 
-  //       payment.getProvider().charges.create.restore();
+        provider.subscriptions.create.restore();
 
-  //       done();
-  //     })
-  //     .catch(done);
-  // });
+        done();
+      })
+      .catch(done);
+  });
+
+  it('Should properly unsubscribe customer from subscription', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.subscriptions, 'del', (config, methods, cb) => cb(null, 'UNSUBSCRIBED'));
+
+    payment
+      .unsubscribe(SUBSCRIPTION, true)
+      .then(confirmation => {
+        assert.equal(confirmation, 'UNSUBSCRIBED');
+        assert(provider.subscriptions.del.calledOnce);
+        assert.equal(provider.subscriptions.del.getCall(0).args[0], SUBSCRIPTION);
+        assert.deepEqual(provider.subscriptions.del.getCall(0).args[1], { at_period_end: true });
+        assert.isFunction(provider.subscriptions.del.getCall(0).args[2]);
+
+        provider.subscriptions.del.restore();
+
+        done();
+      })
+      .catch(done);
+  });
 
   it('Should properly retrieve info about transaction', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().charges, 'retrieve', (transactionId, cb) => cb(null, 'TRANSACTION'));
+    sinon.stub(provider.charges, 'retrieve', (transactionId, cb) => cb(null, 'TRANSACTION'));
 
     payment
       .retrieve('TRANSACTION_ID')
       .then(transaction => {
         assert.equal(transaction, 'TRANSACTION');
-        assert(payment.getProvider().charges.retrieve.calledOnce);
-        assert.deepEqual(payment.getProvider().charges.retrieve.getCall(0).args[0], 'TRANSACTION_ID');
-        assert.isFunction(payment.getProvider().charges.retrieve.getCall(0).args[1]);
+        assert(provider.charges.retrieve.calledOnce);
+        assert.deepEqual(provider.charges.retrieve.getCall(0).args[0], 'TRANSACTION_ID');
+        assert.isFunction(provider.charges.retrieve.getCall(0).args[1]);
 
-        payment.getProvider().charges.retrieve.restore();
+        provider.charges.retrieve.restore();
 
         done();
       })
@@ -372,19 +418,20 @@ describe('StripePayment', () => {
 
   it('Should properly throw exception on getting info about transaction', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().charges, 'retrieve', (transactionId, cb) => cb(new Error('Some error occurred')));
+    sinon.stub(provider.charges, 'retrieve', (transactionId, cb) => cb(new Error('Some error occurred')));
 
     payment
       .retrieve('TRANSACTION_ID')
       .then(done)
       .catch(error => {
         assert.instanceOf(error, Error);
-        assert(payment.getProvider().charges.retrieve.calledOnce);
-        assert.deepEqual(payment.getProvider().charges.retrieve.getCall(0).args[0], 'TRANSACTION_ID');
-        assert.isFunction(payment.getProvider().charges.retrieve.getCall(0).args[1]);
+        assert(provider.charges.retrieve.calledOnce);
+        assert.deepEqual(provider.charges.retrieve.getCall(0).args[0], 'TRANSACTION_ID');
+        assert.isFunction(provider.charges.retrieve.getCall(0).args[1]);
 
-        payment.getProvider().charges.retrieve.restore();
+        provider.charges.retrieve.restore();
 
         done();
       });
@@ -392,18 +439,19 @@ describe('StripePayment', () => {
 
   it('Should properly call refund method', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().refunds, 'create', (config, cb) => cb(null, 'REFUND'));
+    sinon.stub(provider.refunds, 'create', (config, cb) => cb(null, 'REFUND'));
 
     payment
       .refund('TRANSACTION_ID')
       .then(refund => {
         assert.equal(refund, 'REFUND');
-        assert(payment.getProvider().refunds.create.calledOnce);
-        assert.deepEqual(payment.getProvider().refunds.create.getCall(0).args[0], {charge: 'TRANSACTION_ID'});
-        assert.isFunction(payment.getProvider().refunds.create.getCall(0).args[1]);
+        assert(provider.refunds.create.calledOnce);
+        assert.deepEqual(provider.refunds.create.getCall(0).args[0], {charge: 'TRANSACTION_ID'});
+        assert.isFunction(provider.refunds.create.getCall(0).args[1]);
 
-        payment.getProvider().refunds.create.restore();
+        provider.refunds.create.restore();
 
         done();
       })
@@ -412,19 +460,20 @@ describe('StripePayment', () => {
 
   it('Should properly throw exception on refund', done => {
     let payment = newProvider();
+    let provider = payment.getProvider();
 
-    sinon.stub(payment.getProvider().refunds, 'create', (config, cb) => cb(new Error('Some error occurred')));
+    sinon.stub(provider.refunds, 'create', (config, cb) => cb(new Error('Some error occurred')));
 
     payment
       .refund('TRANSACTION_ID')
       .then(done)
       .catch(error => {
         assert.instanceOf(error, Error);
-        assert(payment.getProvider().refunds.create.calledOnce);
-        assert.deepEqual(payment.getProvider().refunds.create.getCall(0).args[0], {charge: 'TRANSACTION_ID'});
-        assert.isFunction(payment.getProvider().refunds.create.getCall(0).args[1]);
+        assert(provider.refunds.create.calledOnce);
+        assert.deepEqual(provider.refunds.create.getCall(0).args[0], {charge: 'TRANSACTION_ID'});
+        assert.isFunction(provider.refunds.create.getCall(0).args[1]);
 
-        payment.getProvider().refunds.create.restore();
+        provider.refunds.create.restore();
 
         done();
       });

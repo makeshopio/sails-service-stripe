@@ -81,19 +81,20 @@ export default class StripePayment extends BasePayment {
 
   /**
    * Create subscription for customer
-   * @param {Object} subscription Credit card data and user info
+   * @param {String} customer Customer id
+   * @param {String} plan Subscription plan name
    * @param {Object} [_config] Additinoal configuration
    * @returns {Promise}
    */
   
-  subscribe(subscription, _config = {}) {
+  subscribe(customer, plan, _config = {}) {
     let config = _.merge({
-      plan: subscription.plan
+      customer,
+      plan
     }, _config);
 
     return new Promise((resolve, reject) => {
-      this.getProvider().customers.createSubscription(
-        subscription.identifier,
+      this.getProvider().subscriptions.create(
         config,
         (err, res) => err ? reject(err) : resolve(res)
       )
@@ -102,16 +103,16 @@ export default class StripePayment extends BasePayment {
 
   /**
   * Cancel a customer's subscription
-  * @param {String} customerId
-  * @param {String} subscriptionId
+  * @param {String} subscription Subscription id
+  * @param {Boolean} at_period_end Delay cancellation until end of period
   * @returns {Promise}
   */
 
-  cancelSubscription(customerId, subscriptionId) {
+  unsubscribe(subscription, at_period_end = false) {
     return new Promise((resolve, reject) => {
-      this.getProvider().customers.cancelSubscription(
-        customerId,
-        subscriptionId,
+      this.getProvider().subscriptions.del(
+        subscription,
+        { at_period_end },
         (err, res) => err ? reject(err) : resolve(res)
       )
     });
