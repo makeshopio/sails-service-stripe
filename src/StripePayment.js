@@ -15,13 +15,13 @@ export default class StripePayment extends BasePayment {
    * @param  {Object} data Credit card or bank account data
    * @return {Promise}
    */
-  _createToken(type, data) {
-    return new Promise((resolve, reject) => 
+  createToken(type, data) {
+    return new Promise((resolve, reject) => {
       this.getProvider().tokens.create(
-        { type: data },
-        (err, res) => err ? reject(err) : res(res)
+        { [type]: data },
+        (err, res) => err ? reject(err) : resolve(res)
       )
-    )
+    })
   }
 
   /**
@@ -30,7 +30,7 @@ export default class StripePayment extends BasePayment {
    * @return {Promise}
    */
   createCardToken(card) {
-    return _createToken('card', card);
+    return this.createToken('card', card);
   }
 
   /**
@@ -39,7 +39,7 @@ export default class StripePayment extends BasePayment {
    * @return {Promise}
    */
   createBankAccountToken(bank_account) {
-    return _createToken('bank_account', bank_account);
+    return this.createToken('bank_account', bank_account);
   }
 
   /**
@@ -51,7 +51,7 @@ export default class StripePayment extends BasePayment {
     return new Promise((resolve, reject) => 
       this.getProvider().tokens.retrieve(
         id,
-        (err, res) => err ? reject(err) : res(res)
+        (err, res) => err ? reject(err) : resolve(res)
       ),
     )
   }
@@ -74,7 +74,7 @@ export default class StripePayment extends BasePayment {
     return new Promise((resolve, reject) => {
       this.getProvider().customers.create(
         config,
-        (err, res) => err ? reject(err) : res(res)
+        (err, res) => err ? reject(err) : resolve(res)
       );
     })
   }
