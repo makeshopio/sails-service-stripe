@@ -158,7 +158,7 @@ describe('StripePayment', () => {
       });
   });
 
-  it('Should properly get information from token', done => {
+  it('Should properly get token info', done => {
     let payment = newProvider();
 
     sinon.stub(payment.getProvider().tokens, 'retrieve', (config, cb) => cb(null, 'TOKEN'));
@@ -176,6 +176,26 @@ describe('StripePayment', () => {
         done();
       })
       .catch(done)
+  });
+
+  it('Should properly thow exception when trying to get token info', done => {
+    let payment = newProvider();
+
+    sinon.stub(payment.getProvider().tokens, 'retrieve', (config, cb) => cb(new Error('Some error occurred')));
+
+    payment
+      .getToken(TOKEN)
+      .then(done)
+      .catch(error => {
+        assert.instanceOf(error, Error);
+        assert(payment.getProvider().tokens.retrieve.calledOnce);
+        assert.deepEqual(payment.getProvider().tokens.retrieve.getCall(0).args[0], TOKEN);
+        assert.isFunction(payment.getProvider().tokens.retrieve.getCall(0).args[1]);
+
+        payment.getProvider().tokens.retrieve.restore();
+
+        done();
+      })
   });
 
   it('Should properly charge', done => {
