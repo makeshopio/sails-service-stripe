@@ -6,56 +6,54 @@ const PROVIDER_CONFIG = {
   apiKey: ''
 };
 
+const AMOUNT = Number((Math.random() * 1000).toFixed(2));
+const NAME = 'Aaron Dancer';
+const EMAIL = 'me@aarondancer.com';
+const CURRENCY = 'usd';
+const TOKEN = 'tok_189faG2eZvKYlo2CT5j1rPJk';
+
 const CREDIT_CARD = {
-  amount: 100 * 15.35,
+  amount: AMOUNT,
   cardNumber: '4242424242424242',
-  cardHolderName: 'Eugene Obrezkov',
+  cardHolderName: NAME,
   expMonth: '01',
   expYear: '2018',
   cvv: '123'
 };
 
 const CHECKOUT_CONFIG_SHOULD_BE = {
-  amount: 1535,
-  currency: 'usd',
+  amount: AMOUNT,
+  currency: CURRENCY,
   capture: true,
-  source: {
-    object: 'card',
-    number: '4242424242424242',
-    exp_month: '01',
-    exp_year: '2018',
-    cvc: '123',
-    name: 'Eugene Obrezkov'
-  }
+  source: TOKEN
 };
 
 const CHECKOUT_CONFIG_EXTENDED_SHOULD_BE = {
-  amount: 1535,
-  currency: 'usd',
+  amount: AMOUNT,
+  currency: CURRENCY,
   capture: true,
-  receipt_email: 'ghaiklor@gmail.com',
-  source: {
-    object: 'card',
-    number: '4242424242424242',
-    exp_month: '01',
-    exp_year: '2018',
-    cvc: '123',
-    name: 'Eugene Obrezkov'
-  }
+  receipt_email: EMAIL,
+  source: CHECKOUT_CONFIG_SHOULD_BE.source
 };
+
+const CUSTOMER = {
+  email: EMAIL,
+  phone: '9998887777',
+  source: CHECKOUT_CONFIG_SHOULD_BE.source
+}
 
 describe('StripePayment', () => {
   it('Should properly export StripePayment', () => {
     assert.isFunction(StripePayment);
   });
 
-  it('Should properly make checkout', done => {
+  it('Should properly charge', done => {
     let payment = new StripePayment(PROVIDER_CONFIG);
 
     sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb(null, 'CHARGE'));
 
     payment
-      .checkout(CREDIT_CARD)
+      .charge(TOKEN, AMOUNT, {})
       .then(charge => {
         assert.equal(charge, 'CHARGE');
         assert(payment.getProvider().charges.create.calledOnce);
@@ -69,13 +67,13 @@ describe('StripePayment', () => {
       .catch(done);
   });
 
-  it('Should properly throw exception on checkout', done => {
+  it('Should properly throw exception on charge', done => {
     let payment = new StripePayment(PROVIDER_CONFIG);
 
     sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb(new Error('Some error occurred')));
 
     payment
-      .checkout(CREDIT_CARD)
+      .charge(TOKEN, AMOUNT, {})
       .then(done)
       .catch(error => {
         assert.instanceOf(error, Error);
@@ -89,13 +87,13 @@ describe('StripePayment', () => {
       });
   });
 
-  it('Should properly make checkout with extended properties', done => {
+  it('Should properly conduct charge with extended properties', done => {
     let payment = new StripePayment(PROVIDER_CONFIG);
 
     sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb());
 
     payment
-      .checkout(CREDIT_CARD, {receipt_email: 'ghaiklor@gmail.com'})
+      .charge(TOKEN, AMOUNT, {receipt_email: EMAIL})
       .then(() => {
         assert(payment.getProvider().charges.create.calledOnce);
         assert.deepEqual(payment.getProvider().charges.create.getCall(0).args[0], CHECKOUT_CONFIG_EXTENDED_SHOULD_BE);
@@ -107,6 +105,26 @@ describe('StripePayment', () => {
       })
       .catch(done);
   });
+
+  // it('Should properly subscribe customer to plan', done => {
+  //   let payment = new StripePayment(PROVIDER_CONFIG);
+
+  //   sinon.stub(payment.getProvider().subscribe, 'create', (config, cb) => cb(null, 'SUBSCRIBE'));
+
+  //   payment
+  //     .subscribe(CREDIT_CARD)
+  //     .then(charge => {
+  //       assert.equal(charge, 'CHARGE');
+  //       assert(payment.getProvider().charges.create.calledOnce);
+  //       assert.deepEqual(payment.getProvider().charges.create.getCall(0).args[0], CHECKOUT_CONFIG_SHOULD_BE);
+  //       assert.isFunction(payment.getProvider().charges.create.getCall(0).args[1]);
+
+  //       payment.getProvider().charges.create.restore();
+
+  //       done();
+  //     })
+  //     .catch(done);
+  // });
 
   it('Should properly retrieve info about transaction', done => {
     let payment = new StripePayment(PROVIDER_CONFIG);

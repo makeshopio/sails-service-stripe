@@ -10,24 +10,65 @@ export default class StripePayment extends BasePayment {
   }
 
   /**
+   * Create a token of specified type and data
+   * @param  {String} type 'card' or 'bank_account'
+   * @param  {Object} data Credit card or bank account data
+   * @return {Promise}
+   */
+  _createToken(type, data) {
+    return new Promise((resolve, reject) => 
+      this.getProvider().tokens.create(
+        { type: data },
+        (err, res) => err ? reject(err) : res(res)
+      )
+    )
+  }
+
+  /**
+   * Create a new credit card token
+   * @param  {Object} card Credit card data
+   * @return {Promise}
+   */
+  createCardToken(card) {
+    return _createToken('card', card);
+  }
+
+  /**
+   * Create a new bank account token
+   * @param  {Object} bank_account Bank account data
+   * @return {Promise}
+   */
+  createBankAccountToken(bank_account) {
+    return _createToken('bank_account', bank_account);
+  }
+
+  /**
+   * Get a token's information from its token id
+   * @param  {String} id Token id
+   * @return {Promise}
+   */
+  getToken(id) {
+    return new Promise((resolve, reject) => 
+      this.getProvider().tokens.retrieve(
+        id,
+        (err, res) => err ? reject(err) : res(res)
+      ),
+    )
+  }
+
+  /**
    * Create a Stripe customer
-   * @param {Object} customer Credit card data and user info
-   * @param {Object} _config Additional configuration
+   * @param {Object} customer User info
+   * @param {String} token Credit card token id
+   * @param {Object} [_config] Additional configuration
    * @return {Promise}
    */
   
-  createCustomer(customer, _config) {
+  createCustomer(customer, token, _config = {}) {
     let config = _.merge({
       email: customer.email,
       phone: customer.phone,
-      source: {
-        object: 'card',
-        number: customer.cardNumber,
-        exp_month: customer.expMonth,
-        exp_year: customer.expYear,
-        cvc: customer.cvc,
-        name: customer.cardHolderName
-      }
+      source: token
     }, _config);
 
     return new Promise((resolve, reject) => {
@@ -41,11 +82,11 @@ export default class StripePayment extends BasePayment {
   /**
    * Create subscription for customer
    * @param {Object} subscription Credit card data and user info
-   * @param {Object} _config Additinoal configuration
+   * @param {Object} [_config] Additinoal configuration
    * @returns {Promise}
    */
   
-  subscribe(subscription, _config) {
+  subscribe(subscription, _config = {}) {
     let config = _.merge({
       plan: subscription.plan
     }, _config);
@@ -59,73 +100,65 @@ export default class StripePayment extends BasePayment {
     })
   }
 
- /**
+  /**
   * Cancel a customer's subscription
   * @param {String} customerId
   * @param {String} subscriptionId
   * @returns {Promise}
   */
- 
- cancelSubscription(customerId, subscriptionId) {
-  return new Promise((resolve, reject) => {
-    this.getProvider().customers.cancelSubscription(
-      customerId,
-      subscriptionId,
-      (err, res) => err ? reject(err) : resolve(res)
-    )
-  });
- }
 
-  /**
-   * Checkout credit card
-   * @param {Object} _creditCard Credit card data
-   * @param {Object} [_config] Additional configuration for provider
-   * @returns {Promise}
-   * @example
-   * stripePayment.checkout({
-   *  amount: '10.00',
-   *  cardNumber: '4242424242424242',
-   *  cardHolderName: 'Eugene Obrezkov',
-   *  expMonth: '01',
-   *  expYear: '2018',
-   *  cvv: '123'
-   * });
-   */
-  checkout(_creditCard, _config) {
-    let config = _.merge({
-      amount: _creditCard.amount,
-      currency: 'usd',
-      capture: true,
-      source: {
-        object: 'card',
-        number: _creditCard.cardNumber,
-        exp_month: _creditCard.expMonth,
-        exp_year: _creditCard.expYear,
-        cvc: _creditCard.cvv,
-        name: _creditCard.cardHolderName
-      }
-    }, _config);
-
+  cancelSubscription(customerId, subscriptionId) {
     return new Promise((resolve, reject) => {
-      this.getProvider().charges.create(config, (error, result) => error ? reject(error) : resolve(result));
+      this.getProvider().customers.cancelSubscription(
+        customerId,
+        subscriptionId,
+        (err, res) => err ? reject(err) : resolve(res)
+      )
     });
   }
 
   /**
-   * Charge a credit card via Stripe token
-   * @param {String} _token The Stripe token
-   * @param {String} _options Additional options
+   * Charge a payment method (Card or Bank Account) via Stripe token
+   * @param {String} _token Payment method token id
+   * @param {Number} _amount Amount to be charged
+   * @param {Object} [_config] Additional configuration for provider
+   * @returns {Promise}
    */
-  
-  charge(_token, _config) {
+  charge(_token, _amount, _config = {}) {
     let config = _.merge({
+      amount: _amount,
+      currency: 'usd',
+      capture: true,
       source: _token
-    }, _config)
-    return new Promise(() => {
-      this.getProvider().charges.create(_config, (err, res) => (
-        error ? reject(err) : resolve(res)
-      ));
+    }, _config);
+
+    return new Promise((resolve, reject) => {
+      this.getProvider().charges.create(
+        config,
+        (error, result) => error ? reject(error) : resolve(result)
+      );
     });
+  }
+
+  /**
+   * Charge a credit card via Credit card data
+   * @param {Object} _token Credit card data
+   * @param {Number} _amount Amount to be charged
+   * @param {Object} [_config] Additional configuration for provider
+   * @returns {Promise}
+   */
+  chargeCard(_card, _amount, _config = {}) {
+    return new Promise((resolve, reject) => {
+      createCardToken(_card)
+        .then((err, result) => {
+          if (err) reject(err);
+          return charge(result.id, _amount, _config);
+        })
+        .then((err, result) => {
+          if (err) reject(err);
+          resolve(result);
+        })
+    })
   }
 
   /**
@@ -135,7 +168,10 @@ export default class StripePayment extends BasePayment {
    */
   retrieve(_transactionId) {
     return new Promise((resolve, reject) => {
-      this.getProvider().charges.retrieve(_transactionId, (error, charge) => error ? reject(error) : resolve(charge));
+      this.getProvider().charges.retrieve(
+        _transactionId,
+        (error, charge) => error ? reject(error) : resolve(charge)
+      );
     });
   }
 
@@ -146,7 +182,10 @@ export default class StripePayment extends BasePayment {
    */
   refund(_transactionId) {
     return new Promise((resolve, reject) => {
-      this.getProvider().refunds.create({charge: _transactionId}, (error, refund) => error ? reject(error) : resolve(refund));
+      this.getProvider().refunds.create(
+        { charge: _transactionId },
+        (error, refund) => error ? reject(error) : resolve(refund)
+      );
     });
   }
 }
