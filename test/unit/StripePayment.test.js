@@ -50,13 +50,13 @@ const CHECKOUT_CONFIG_EXTENDED_SHOULD_BE = {
   currency: CURRENCY,
   capture: true,
   receipt_email: EMAIL,
-  source: CHECKOUT_CONFIG_SHOULD_BE.source
+  source: TOKEN
 };
 
 const CUSTOMER = {
   email: EMAIL,
   phone: '9998887777',
-  source: CHECKOUT_CONFIG_SHOULD_BE.source
+  source: TOKEN
 }
 
 const newProvider = () => (new StripePayment(PROVIDER_CONFIG));
@@ -255,6 +255,79 @@ describe('StripePayment', () => {
         done();
       })
       .catch(done);
+  });
+
+  it('Should properly charge credit card with raw info', done => {
+    let payment = newProvider();
+
+    sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb(null, 'CHARGE'));
+    sinon.stub(payment.getProvider().tokens, 'create', (config, cb) => cb(null, { id: TOKEN }));
+
+    payment
+      .chargeCard(CREDIT_CARD, AMOUNT, {})
+      .then(charge => {
+        assert.equal(charge, 'CHARGE');
+        assert(payment.getProvider().charges.create.calledOnce);
+        assert(payment.getProvider().tokens.create.calledOnce);
+        assert.deepEqual(payment.getProvider().charges.create.getCall(0).args[0], CHECKOUT_CONFIG_SHOULD_BE);
+        assert.isFunction(payment.getProvider().charges.create.getCall(0).args[1]);
+        assert.deepEqual(payment.getProvider().tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
+        assert.isFunction(payment.getProvider().tokens.create.getCall(0).args[1]);
+
+        payment.getProvider().tokens.create.restore();
+        payment.getProvider().charges.create.restore();
+
+        done();
+      })
+      .catch(done);
+  });
+
+  it('Should throw when charging credit card with invalid raw info', done => {
+    let payment = newProvider();
+
+    sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb(null, 'CHARGE'));
+    sinon.stub(payment.getProvider().tokens, 'create', (config, cb) => cb(new Error('Credit card invalid')));
+
+    payment
+      .chargeCard(CREDIT_CARD, AMOUNT, {})
+      .then(done)
+      .catch(error => {
+        assert.instanceOf(error, Error);
+        assert(payment.getProvider().charges.create.neverCalledWith());
+        assert(payment.getProvider().tokens.create.calledOnce);
+        assert.deepEqual(payment.getProvider().tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
+        assert.isFunction(payment.getProvider().tokens.create.getCall(0).args[1]);
+
+        payment.getProvider().tokens.create.restore();
+        payment.getProvider().charges.create.restore();
+
+        done();
+      });
+  });
+
+  it('Should throw when charging credit card with token info', done => {
+    let payment = newProvider();
+
+    sinon.stub(payment.getProvider().charges, 'create', (config, cb) => cb(new Error('Token id does not exist')));
+    sinon.stub(payment.getProvider().tokens, 'create', (config, cb) => cb(null, { id: TOKEN }));
+
+    payment
+      .chargeCard(CREDIT_CARD, AMOUNT, {})
+      .then(done)
+      .catch(error => {
+        assert.instanceOf(error, Error);
+
+        assert(payment.getProvider().charges.create.calledOnce);
+        assert(payment.getProvider().tokens.create.calledOnce);
+
+        assert.deepEqual(payment.getProvider().tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
+        assert.isFunction(payment.getProvider().tokens.create.getCall(0).args[1]);
+
+        payment.getProvider().tokens.create.restore();
+        payment.getProvider().charges.create.restore();
+
+        done();
+      });
   });
 
   // it('Should properly subscribe customer to plan', done => {

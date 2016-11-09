@@ -149,15 +149,11 @@ export default class StripePayment extends BasePayment {
    */
   chargeCard(_card, _amount, _config = {}) {
     return new Promise((resolve, reject) => {
-      createCardToken(_card)
-        .then((err, result) => {
-          if (err) reject(err);
-          return charge(result.id, _amount, _config);
-        })
-        .then((err, result) => {
-          if (err) reject(err);
-          resolve(result);
-        })
+      this.createCardToken(_card)
+        .then((result) => this.charge(result.id, _amount, _config))
+        .catch((err) => reject(err))
+        .then((result) => resolve(result))
+        .catch((err) => reject(err))
     })
   }
 
