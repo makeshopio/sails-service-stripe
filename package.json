@@ -30,7 +30,9 @@
   },
   "homepage": "https://github.com/aarondancer/sails-service-stripe#readme",
   "dependencies": {
-    "lodash": "^4.16.5",
+    "babel-plugin-lodash": "^3.2.9",
+    "babel-plugin-transform-object-rest-spread": "^6.16.0",
+    "lodash": "^4.16.6",
     "stripe": "4.12.0"
   },
   "devDependencies": {

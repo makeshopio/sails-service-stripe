@@ -1,7 +1,6 @@
 import { assert } from 'chai';
 import sinon from 'sinon';
 import StripePayment from '../../src/StripePayment';
-import _ from 'lodash';
 
 const PROVIDER_CONFIG = {
   apiKey: ''
@@ -48,11 +47,8 @@ const CHECKOUT_CONFIG_SHOULD_BE = {
 };
 
 const CHECKOUT_CONFIG_EXTENDED_SHOULD_BE = {
-  amount: AMOUNT,
-  currency: CURRENCY,
-  capture: true,
   receipt_email: EMAIL,
-  source: TOKEN
+  ...CHECKOUT_CONFIG_SHOULD_BE
 };
 
 const CUSTOMER = {
@@ -320,7 +316,7 @@ describe('StripePayment', () => {
         assert.equal(charge, 'CHARGE');
         assert(provider.charges.create.calledOnce);
         assert(provider.tokens.create.calledOnce);
-        assert.deepEqual(provider.charges.create.getCall(0).args[0], _.merge({ receipt_email: EMAIL }, CHECKOUT_CONFIG_SHOULD_BE));
+        assert.deepEqual(provider.charges.create.getCall(0).args[0], { receipt_email: EMAIL, ...CHECKOUT_CONFIG_SHOULD_BE });
         assert.isFunction(provider.charges.create.getCall(0).args[1]);
         assert.deepEqual(provider.tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
         assert.isFunction(provider.tokens.create.getCall(0).args[1]);
@@ -480,7 +476,7 @@ describe('StripePayment', () => {
       .then(subscription => {
         assert.equal(subscription, 'SUBSCRIBED');
         assert(provider.subscriptions.create.calledOnce);
-        assert.deepEqual(provider.subscriptions.create.getCall(0).args[0], _.merge({ coupon: 'FREE' }, SUBSCRIBE_CONFIG_SHOULD_BE));
+        assert.deepEqual(provider.subscriptions.create.getCall(0).args[0], { coupon: 'FREE', ...SUBSCRIBE_CONFIG_SHOULD_BE });
         assert.isFunction(provider.subscriptions.create.getCall(0).args[1]);
 
         provider.subscriptions.create.restore();

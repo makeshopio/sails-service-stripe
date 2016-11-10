@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import stripe from 'stripe';
 import BasePayment from './BasePayment';
 
@@ -66,11 +65,12 @@ export default class StripePayment extends BasePayment {
    */
   
   createCustomer(customer, token, _config = {}) {
-    let config = _.merge({
+    let config = {
       email: customer.email,
       phone: customer.phone,
-      source: token
-    }, _config);
+      source: token,
+      ..._config
+    };
 
     return new Promise((resolve, reject) => {
       this.getProvider().customers.create(
@@ -89,10 +89,11 @@ export default class StripePayment extends BasePayment {
    */
   
   subscribe(customer, plan, _config = {}) {
-    let config = _.merge({
+    let config = {
       customer,
-      plan
-    }, _config);
+      plan,
+      ..._config
+    };
 
     return new Promise((resolve, reject) => {
       this.getProvider().subscriptions.create(
@@ -128,9 +129,10 @@ export default class StripePayment extends BasePayment {
   getSubscriptions(customer, _config) {
     return new Promise((resolve, reject) => {
       this.getProvider().subscriptions.list(
-        _.merge({
-          customer
-        }, _config),
+        {
+          customer,
+          ..._config
+        },
         (err, res) => err ? reject(err) : resolve(res)
       )
     })
@@ -174,12 +176,13 @@ export default class StripePayment extends BasePayment {
    * @returns {Promise}
    */
   charge(_token, _amount, _config = {}) {
-    let config = _.merge({
+    let config = {
       amount: _amount,
       currency: 'usd',
       capture: true,
-      source: _token
-    }, _config);
+      source: _token,
+      ..._config
+    };
 
     return new Promise((resolve, reject) => {
       this.getProvider().charges.create(
