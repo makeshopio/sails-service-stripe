@@ -395,6 +395,71 @@ describe('StripePayment', () => {
       .catch(done);
   });
 
+
+  it('Should properly get subscriptions belonging to customer', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.subscriptions, 'list', (config, cb) => cb(null, 'SUBSCRIPTIONS'));
+
+    payment
+      .getSubscriptions(CUSTOMER_ID, {})
+      .then(subscriptions => {
+        assert.equal(subscriptions, 'SUBSCRIPTIONS');
+        assert(provider.subscriptions.list.calledOnce);
+        assert.deepEqual(provider.subscriptions.list.getCall(0).args[0], { customer: CUSTOMER_ID });
+        assert.isFunction(provider.subscriptions.list.getCall(0).args[1]);
+
+        provider.subscriptions.list.restore();
+
+        done();
+      })
+      .catch(done);
+  });
+
+  it('Should properly get subscription info by id', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.subscriptions, 'retrieve', (config, cb) => cb(null, 'SUBSCRIPTION'));
+
+    payment
+      .getSubscription(SUBSCRIPTION)
+      .then(subscription => {
+        assert.equal(subscription, 'SUBSCRIPTION');
+        assert(provider.subscriptions.retrieve.calledOnce);
+        assert.equal(provider.subscriptions.retrieve.getCall(0).args[0], SUBSCRIPTION);
+        assert.isFunction(provider.subscriptions.retrieve.getCall(0).args[1]);
+
+        provider.subscriptions.retrieve.restore();
+
+        done();
+      })
+      .catch(done);
+  });
+
+  it('Should properly update subscription info by id', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.subscriptions, 'update', (config, methods, cb) => cb(null, 'SUBSCRIPTION'));
+
+    payment
+      .updateSubscription(SUBSCRIPTION, {})
+      .then(subscription => {
+        assert.equal(subscription, 'SUBSCRIPTION');
+        assert(provider.subscriptions.update.calledOnce);
+        assert.equal(provider.subscriptions.update.getCall(0).args[0], SUBSCRIPTION);
+        assert.deepEqual(provider.subscriptions.update.getCall(0).args[1], {});
+        assert.isFunction(provider.subscriptions.update.getCall(0).args[2]);
+
+        provider.subscriptions.update.restore();
+
+        done();
+      })
+      .catch(done);
+  });
+
   it('Should properly retrieve info about transaction', done => {
     let payment = newProvider();
     let provider = payment.getProvider();

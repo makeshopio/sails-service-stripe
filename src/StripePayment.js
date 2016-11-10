@@ -83,7 +83,7 @@ export default class StripePayment extends BasePayment {
    * Create subscription for customer
    * @param {String} customer Customer id
    * @param {String} plan Subscription plan name
-   * @param {Object} [_config] Additinoal configuration
+   * @param {Object} [_config] Additional configuration
    * @returns {Promise}
    */
   
@@ -116,6 +116,53 @@ export default class StripePayment extends BasePayment {
         (err, res) => err ? reject(err) : resolve(res)
       )
     });
+  }
+
+  /**
+   * Get list of subscriptions belonging to customer
+   * @param  {String} customer Customer id
+   * @param  {Object} [_config] Additional configurations
+   * @return {Promise}
+   */
+  getSubscriptions(customer, _config) {
+    return new Promise((resolve, reject) => {
+      this.getProvider().subscriptions.list(
+        _.merge({
+          customer
+        }, _config),
+        (err, res) => err ? reject(err) : resolve(res)
+      )
+    })
+  }
+
+  /**
+   * Get subscription information by id
+   * @param  {String} subscription Subscription id
+   * @return {Promise}
+   */
+  getSubscription(subscription) {
+    return new Promise((resolve, reject) => {
+      this.getProvider().subscriptions.retrieve(
+        subscription,
+        (err, res) => err ? reject(err) : resolve(res)
+      )
+    })
+  }
+
+  /**
+   * Update subscription information by id
+   * @param  {String} subscription Subscription id
+   * @param  {Object} [_config] Properties and options to update
+   * @return {Promise}
+   */
+  updateSubscription(subscription, _config) {
+    return new Promise((resolve, reject) => {
+      this.getProvider().subscriptions.update(
+        subscription,
+        _config,
+        (err, res) => err ? reject(err) : resolve(res)
+      )
+    })
   }
 
   /**
