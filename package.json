@@ -57,5 +57,8 @@
   },
   "release": {
     "branch": "master"
+  },
+  "engines" : {
+    "node" : ">=4"
   }
 }
