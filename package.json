@@ -2,7 +2,7 @@
   "name": "sails-service-stripe",
   "description": "Service for Sails framework with Payment features",
   "main": "lib/index.js",
-  "version": "1.0.0",
+  "version": "0.0.0-semantic-release",
   "scripts": {
     "compile": "babel src --out-dir lib",
     "coveralls": "cat coverage/lcov.info | coveralls",
