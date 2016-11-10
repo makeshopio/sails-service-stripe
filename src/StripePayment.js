@@ -3,6 +3,7 @@ import stripe from 'stripe';
 import BasePayment from './BasePayment';
 
 export default class StripePayment extends BasePayment {
+  /* istanbul ignore next */
   constructor(config) {
     super(config);
 
@@ -199,7 +200,6 @@ export default class StripePayment extends BasePayment {
     return new Promise((resolve, reject) => {
       this.createCardToken(_card)
         .then((result) => this.charge(result.id, _amount, _config))
-        .catch((err) => reject(err))
         .then((result) => resolve(result))
         .catch((err) => reject(err))
     })

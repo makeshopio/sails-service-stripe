@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import sinon from 'sinon';
 import StripePayment from '../../src/StripePayment';
+import _ from 'lodash';
 
 const PROVIDER_CONFIG = {
   apiKey: ''
@@ -76,6 +77,10 @@ describe('StripePayment', () => {
     assert.isFunction(StripePayment);
   });
 
+  it('Should properly construct new StripePayment', () => {
+    assert.instanceOf(new StripePayment(), StripePayment);
+  });
+
   it('Should properly create credit card token', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
@@ -100,7 +105,7 @@ describe('StripePayment', () => {
       .catch(done)
   });
 
-  it('Should properly throw exception on credit card token create', done => {
+  it('Should throw exception on credit card token create', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
 
@@ -148,7 +153,7 @@ describe('StripePayment', () => {
       .catch(done)
   });
 
-  it('Should properly throw exception on bank account token create', done => {
+  it('Should throw exception on bank account token create', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
 
@@ -221,7 +226,7 @@ describe('StripePayment', () => {
     sinon.stub(provider.charges, 'create', (config, cb) => cb(null, 'CHARGE'));
 
     payment
-      .charge(TOKEN, AMOUNT, {})
+      .charge(TOKEN, AMOUNT)
       .then(charge => {
         assert.equal(charge, 'CHARGE');
         assert(provider.charges.create.calledOnce);
@@ -235,14 +240,14 @@ describe('StripePayment', () => {
       .catch(done);
   });
 
-  it('Should properly throw exception on charge', done => {
+  it('Should throw exception on charge', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
 
     sinon.stub(provider.charges, 'create', (config, cb) => cb(new Error('Some error occurred')));
 
     payment
-      .charge(TOKEN, AMOUNT, {})
+      .charge(TOKEN, AMOUNT)
       .then(done)
       .catch(error => {
         assert.instanceOf(error, Error);
@@ -284,7 +289,7 @@ describe('StripePayment', () => {
     sinon.stub(provider.tokens, 'create', (config, cb) => cb(null, { id: TOKEN }));
 
     payment
-      .chargeCard(CREDIT_CARD, AMOUNT, {})
+      .chargeCard(CREDIT_CARD, AMOUNT)
       .then(charge => {
         assert.equal(charge, 'CHARGE');
         assert(provider.charges.create.calledOnce);
@@ -302,20 +307,21 @@ describe('StripePayment', () => {
       .catch(done);
   });
 
-  it('Should throw when charging credit card with invalid raw info', done => {
+  it('Should properly charge credit card with raw info and with config', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
 
     sinon.stub(provider.charges, 'create', (config, cb) => cb(null, 'CHARGE'));
-    sinon.stub(provider.tokens, 'create', (config, cb) => cb(new Error('Credit card invalid')));
+    sinon.stub(provider.tokens, 'create', (config, cb) => cb(null, { id: TOKEN }));
 
     payment
-      .chargeCard(CREDIT_CARD, AMOUNT, {})
-      .then(done)
-      .catch(error => {
-        assert.instanceOf(error, Error);
-        assert(provider.charges.create.neverCalledWith());
+      .chargeCard(CREDIT_CARD, AMOUNT, { receipt_email: EMAIL })
+      .then(charge => {
+        assert.equal(charge, 'CHARGE');
+        assert(provider.charges.create.calledOnce);
         assert(provider.tokens.create.calledOnce);
+        assert.deepEqual(provider.charges.create.getCall(0).args[0], _.merge({ receipt_email: EMAIL }, CHECKOUT_CONFIG_SHOULD_BE));
+        assert.isFunction(provider.charges.create.getCall(0).args[1]);
         assert.deepEqual(provider.tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
         assert.isFunction(provider.tokens.create.getCall(0).args[1]);
 
@@ -323,18 +329,19 @@ describe('StripePayment', () => {
         provider.charges.create.restore();
 
         done();
-      });
+      })
+      .catch(done);
   });
 
-  it('Should throw when charging credit card with token info', done => {
+  it('Should throw when charging credit card with invalid raw info', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
 
-    sinon.stub(provider.charges, 'create', (config, cb) => cb(new Error('Token id does not exist')));
+    sinon.stub(provider.charges, 'create', (config, cb) => cb(new Error('Credit card invalid')));
     sinon.stub(provider.tokens, 'create', (config, cb) => cb(null, { id: TOKEN }));
 
     payment
-      .chargeCard(CREDIT_CARD, AMOUNT, {})
+      .chargeCard(CREDIT_CARD, AMOUNT)
       .then(done)
       .catch(error => {
         assert.instanceOf(error, Error);
@@ -352,7 +359,54 @@ describe('StripePayment', () => {
       });
   });
 
+  it('Should throw when charging credit card with invalid token info', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.charges, 'create', (config, cb) => cb(null, 'CHARGE'));
+    sinon.stub(provider.tokens, 'create', (config, cb) => cb(new Error('Token id does not exist')));
+
+    payment
+      .chargeCard(CREDIT_CARD, AMOUNT)
+      .then(done)
+      .catch(error => {
+        assert.instanceOf(error, Error);
+
+        assert(provider.charges.create.neverCalledWith());
+        assert(provider.tokens.create.calledOnce);
+
+        assert.deepEqual(provider.tokens.create.getCall(0).args[0], TOKEN_CARD_CONFIG_SHOULD_BE);
+        assert.isFunction(provider.tokens.create.getCall(0).args[1]);
+
+        provider.tokens.create.restore();
+        provider.charges.create.restore();
+
+        done();
+      });
+  });
+
   it('Should properly create new customer', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.customers, 'create', (config, cb) => cb(null, 'CUSTOMER'));
+
+    payment
+      .createCustomer(CUSTOMER, TOKEN)
+      .then(customer => {
+        assert.equal(customer, 'CUSTOMER');
+        assert(provider.customers.create.calledOnce);
+        assert.deepEqual(provider.customers.create.getCall(0).args[0], CUSTOMER);
+        assert.isFunction(provider.customers.create.getCall(0).args[1]);
+
+        provider.customers.create.restore();
+
+        done();
+      })
+      .catch(done);
+  });
+
+  it('Should properly create new customer with config', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
 
@@ -373,6 +427,27 @@ describe('StripePayment', () => {
       .catch(done);
   });
 
+  it('Should throw when creating new customer with invalid data', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.customers, 'create', (config, cb) => cb(new Error('No email provided')));
+
+    payment
+      .createCustomer(CUSTOMER, TOKEN)
+      .then(done)
+      .catch(error => {
+        assert.instanceOf(error, Error);
+        assert(provider.customers.create.calledOnce);
+        assert.deepEqual(provider.customers.create.getCall(0).args[0], CUSTOMER);
+        assert.isFunction(provider.customers.create.getCall(0).args[1]);
+
+        provider.customers.create.restore();
+
+        done();
+      })
+  });
+
   it('Should properly subscribe customer to plan', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
@@ -380,7 +455,7 @@ describe('StripePayment', () => {
     sinon.stub(provider.subscriptions, 'create', (config, cb) => cb(null, 'SUBSCRIBED'));
 
     payment
-      .subscribe(CUSTOMER_ID, PLAN, {})
+      .subscribe(CUSTOMER_ID, PLAN)
       .then(subscription => {
         assert.equal(subscription, 'SUBSCRIBED');
         assert(provider.subscriptions.create.calledOnce);
@@ -394,7 +469,71 @@ describe('StripePayment', () => {
       .catch(done);
   });
 
+  it('Should properly subscribe customer to plan with coupon', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.subscriptions, 'create', (config, cb) => cb(null, 'SUBSCRIBED'));
+
+    payment
+      .subscribe(CUSTOMER_ID, PLAN, { coupon: 'FREE' })
+      .then(subscription => {
+        assert.equal(subscription, 'SUBSCRIBED');
+        assert(provider.subscriptions.create.calledOnce);
+        assert.deepEqual(provider.subscriptions.create.getCall(0).args[0], _.merge({ coupon: 'FREE' }, SUBSCRIBE_CONFIG_SHOULD_BE));
+        assert.isFunction(provider.subscriptions.create.getCall(0).args[1]);
+
+        provider.subscriptions.create.restore();
+
+        done();
+      })
+      .catch(done);
+  });
+
+  it('Should throw when failing to subscribe customer to plan', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.subscriptions, 'create', (config, cb) => cb(new Error('Plan does not exist')));
+
+    payment
+      .subscribe(CUSTOMER_ID, PLAN)
+      .then(done)
+      .catch(error => {
+        assert.instanceOf(error, Error);
+        assert(provider.subscriptions.create.calledOnce);
+        assert.deepEqual(provider.subscriptions.create.getCall(0).args[0], SUBSCRIBE_CONFIG_SHOULD_BE);
+        assert.isFunction(provider.subscriptions.create.getCall(0).args[1]);
+
+        provider.subscriptions.create.restore();
+
+        done();
+      })
+  });
+
   it('Should properly unsubscribe customer from subscription', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.subscriptions, 'del', (config, methods, cb) => cb(null, 'UNSUBSCRIBED'));
+
+    payment
+      .unsubscribe(SUBSCRIPTION)
+      .then(confirmation => {
+        assert.equal(confirmation, 'UNSUBSCRIBED');
+        assert(provider.subscriptions.del.calledOnce);
+        assert.equal(provider.subscriptions.del.getCall(0).args[0], SUBSCRIPTION);
+        assert.deepEqual(provider.subscriptions.del.getCall(0).args[1], { at_period_end: false });
+        assert.isFunction(provider.subscriptions.del.getCall(0).args[2]);
+
+        provider.subscriptions.del.restore();
+
+        done();
+      })
+      .catch(done);
+  });
+
+  it('Should properly unsubscribe customer from subscription at end of period', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
 
@@ -414,6 +553,28 @@ describe('StripePayment', () => {
         done();
       })
       .catch(done);
+  });
+
+  it('Should throw when unable to unsubscribe from subscription', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.subscriptions, 'del', (config, methods, cb) => cb(new Error('Subscription does not exist')));
+
+    payment
+      .unsubscribe(SUBSCRIPTION)
+      .then(done)
+      .catch(error => {
+        assert.instanceOf(error, Error);
+        assert(provider.subscriptions.del.calledOnce);
+        assert.equal(provider.subscriptions.del.getCall(0).args[0], SUBSCRIPTION);
+        assert.deepEqual(provider.subscriptions.del.getCall(0).args[1], { at_period_end: false });
+        assert.isFunction(provider.subscriptions.del.getCall(0).args[2]);
+
+        provider.subscriptions.del.restore();
+
+        done();
+      })
   });
 
 
@@ -438,6 +599,27 @@ describe('StripePayment', () => {
       .catch(done);
   });
 
+  it('Should throw if unable to get subscriptions belonging to customer', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.subscriptions, 'list', (config, cb) => cb(new Error('Customer does not exist')));
+
+    payment
+      .getSubscriptions(CUSTOMER_ID, {})
+      .then(done)
+      .catch(error => {
+        assert.instanceOf(error, Error);
+        assert(provider.subscriptions.list.calledOnce);
+        assert.deepEqual(provider.subscriptions.list.getCall(0).args[0], { customer: CUSTOMER_ID });
+        assert.isFunction(provider.subscriptions.list.getCall(0).args[1]);
+
+        provider.subscriptions.list.restore();
+
+        done();
+      })
+  });
+
   it('Should properly get subscription info by id', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
@@ -457,6 +639,27 @@ describe('StripePayment', () => {
         done();
       })
       .catch(done);
+  });
+
+  it('Should throw if unable to get subscription info by id', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.subscriptions, 'retrieve', (config, cb) => cb(new Error('Subscription does not exist')));
+
+    payment
+      .getSubscription(SUBSCRIPTION)
+      .then(done)
+      .catch(error => {
+        assert.instanceOf(error, Error);
+        assert(provider.subscriptions.retrieve.calledOnce);
+        assert.equal(provider.subscriptions.retrieve.getCall(0).args[0], SUBSCRIPTION);
+        assert.isFunction(provider.subscriptions.retrieve.getCall(0).args[1]);
+
+        provider.subscriptions.retrieve.restore();
+
+        done();
+      })
   });
 
   it('Should properly update subscription info by id', done => {
@@ -481,6 +684,28 @@ describe('StripePayment', () => {
       .catch(done);
   });
 
+  it('Should throw if unable to update subscription info by id', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.subscriptions, 'update', (config, methods, cb) => cb(new Error('Subscription does not exist')));
+
+    payment
+      .updateSubscription(SUBSCRIPTION, {})
+      .then(done)
+      .catch(error => {
+        assert.instanceOf(error, Error);
+        assert(provider.subscriptions.update.calledOnce);
+        assert.equal(provider.subscriptions.update.getCall(0).args[0], SUBSCRIPTION);
+        assert.deepEqual(provider.subscriptions.update.getCall(0).args[1], {});
+        assert.isFunction(provider.subscriptions.update.getCall(0).args[2]);
+
+        provider.subscriptions.update.restore();
+
+        done();
+      })
+  });
+
   it('Should properly retrieve info about transaction', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
@@ -502,7 +727,7 @@ describe('StripePayment', () => {
       .catch(done);
   });
 
-  it('Should properly throw exception on getting info about transaction', done => {
+  it('Should throw exception on getting info about transaction', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
 
@@ -544,7 +769,7 @@ describe('StripePayment', () => {
       .catch(done);
   });
 
-  it('Should properly throw exception on refund', done => {
+  it('Should throw exception on refund', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
 
