@@ -1,5 +1,7 @@
 # sails-service-stripe
 
+[![TravisCI](https://travis-ci.org/aarondancer/sails-service-stripe.svg?branch=dev)](https://travis-ci.org/aarondancer/sails-service-stripe) [![Coverage Status](https://coveralls.io/repos/github/aarondancer/sails-service-stripe/badge.svg?branch=dev)](https://coveralls.io/github/aarondancer/sails-service-stripe?branch=dev)
+
 Service for Sails framework with Payment features.
 
 ## List of supported payment systems
