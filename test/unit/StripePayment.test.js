@@ -352,6 +352,27 @@ describe('StripePayment', () => {
       });
   });
 
+  it('Should properly create new customer', done => {
+    let payment = newProvider();
+    let provider = payment.getProvider();
+
+    sinon.stub(provider.customers, 'create', (config, cb) => cb(null, 'CUSTOMER'));
+
+    payment
+      .createCustomer(CUSTOMER, TOKEN, {})
+      .then(customer => {
+        assert.equal(customer, 'CUSTOMER');
+        assert(provider.customers.create.calledOnce);
+        assert.deepEqual(provider.customers.create.getCall(0).args[0], CUSTOMER);
+        assert.isFunction(provider.customers.create.getCall(0).args[1]);
+
+        provider.customers.create.restore();
+
+        done();
+      })
+      .catch(done);
+  });
+
   it('Should properly subscribe customer to plan', done => {
     let payment = newProvider();
     let provider = payment.getProvider();
