@@ -13,7 +13,6 @@ const payment = {
 export default function (type, config) {
   if (payment[type.toLowerCase()] instanceof Function) {
     return new payment[type.toLowerCase()](config);
-  } else {
-    throw new Error('Unrecognized type -> ' + type);
   }
-};
+  throw new Error(`Unrecognized type -> ${type}`);
+}

@@ -2,10 +2,8 @@ import _ from 'lodash';
 
 export default class BasePayment {
   constructor(config) {
-    this._config = {};
-    this._provider = {};
-
-    _.assign(this._config, config);
+    this.config = { ...config };
+    this.provider = {};
   }
 
   /**
@@ -14,7 +12,7 @@ export default class BasePayment {
    * @returns {*}
    */
   get(path) {
-    return typeof path === 'undefined' ? this._config : _.get(this._config, path);
+    return typeof path === 'undefined' ? this.config : _.get(this.config, path);
   }
 
   /**
@@ -24,7 +22,7 @@ export default class BasePayment {
    * @returns {BasePayment}
    */
   set(path, value) {
-    _.set(this._config, path, value);
+    _.set(this.config, path, value);
     return this;
   }
 
@@ -33,7 +31,7 @@ export default class BasePayment {
    * @returns {*}
    */
   getProvider() {
-    return this._provider;
+    return this.provider;
   }
 
   /**
@@ -42,7 +40,7 @@ export default class BasePayment {
    * @returns {BasePayment}
    */
   setProvider(provider) {
-    this._provider = provider;
+    this.provider = provider;
     return this;
   }
 }

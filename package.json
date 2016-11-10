@@ -42,6 +42,11 @@
     "chai": "3.5.0",
     "coveralls": "2.11.14",
     "cz-conventional-changelog": "1.2.0",
+    "eslint": "^3.9.1",
+    "eslint-config-airbnb": "^13.0.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^2.2.3",
+    "eslint-plugin-react": "^6.6.0",
     "isparta": "4.0.0",
     "mocha": "3.1.2",
     "semantic-release": "^4.3.5",
@@ -58,7 +63,7 @@
   "release": {
     "branch": "master"
   },
-  "engines" : {
-    "node" : ">=4"
+  "engines": {
+    "node": ">=4"
   }
 }

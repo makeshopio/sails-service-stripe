@@ -1,0 +1,16 @@
+{
+  "extends": "airbnb",
+  "installedESLint": true,
+  "env": {
+    "node": true,
+    "mocha": true
+  },
+  "plugins": [
+    "react",
+    "jsx-a11y",
+    "import"
+  ],
+  "rules": {
+  	"comma-dangle": ["error", "never"]
+  }
+}

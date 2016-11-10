@@ -1,7 +1,8 @@
 import stripe from 'stripe';
 import BasePayment from './BasePayment';
 
-export default class StripePayment extends BasePayment {
+export default
+class StripePayment extends BasePayment {
   /* istanbul ignore next */
   constructor(config) {
     super(config);
@@ -19,9 +20,9 @@ export default class StripePayment extends BasePayment {
     return new Promise((resolve, reject) => {
       this.getProvider().tokens.create(
         { [type]: data },
-        (err, res) => err ? reject(err) : resolve(res)
-      )
-    })
+        (err, res) => (err ? reject(err) : resolve(res))
+      );
+    });
   }
 
   /**
@@ -35,11 +36,11 @@ export default class StripePayment extends BasePayment {
 
   /**
    * Create a new bank account token
-   * @param  {Object} bank_account Bank account data
+   * @param  {Object} bankAccount Bank account data
    * @return {Promise}
    */
-  createBankAccountToken(bank_account) {
-    return this.createToken('bank_account', bank_account);
+  createBankAccountToken(bankAccount) {
+    return this.createToken('bank_account', bankAccount);
   }
 
   /**
@@ -48,12 +49,12 @@ export default class StripePayment extends BasePayment {
    * @return {Promise}
    */
   getToken(id) {
-    return new Promise((resolve, reject) => 
+    return new Promise((resolve, reject) =>
       this.getProvider().tokens.retrieve(
         id,
-        (err, res) => err ? reject(err) : resolve(res)
+        (err, res) => (err ? reject(err) : resolve(res))
       ),
-    )
+    );
   }
 
   /**
@@ -63,9 +64,8 @@ export default class StripePayment extends BasePayment {
    * @param {Object} [_config] Additional configuration
    * @return {Promise}
    */
-  
   createCustomer(customer, token, _config = {}) {
-    let config = {
+    const config = {
       email: customer.email,
       phone: customer.phone,
       source: token,
@@ -75,9 +75,9 @@ export default class StripePayment extends BasePayment {
     return new Promise((resolve, reject) => {
       this.getProvider().customers.create(
         config,
-        (err, res) => err ? reject(err) : resolve(res)
+        (err, res) => (err ? reject(err) : resolve(res))
       );
-    })
+    });
   }
 
   /**
@@ -87,9 +87,8 @@ export default class StripePayment extends BasePayment {
    * @param {Object} [_config] Additional configuration
    * @returns {Promise}
    */
-  
   subscribe(customer, plan, _config = {}) {
-    let config = {
+    const config = {
       customer,
       plan,
       ..._config
@@ -98,25 +97,25 @@ export default class StripePayment extends BasePayment {
     return new Promise((resolve, reject) => {
       this.getProvider().subscriptions.create(
         config,
-        (err, res) => err ? reject(err) : resolve(res)
-      )
-    })
+        (err, res) => (err ? reject(err) : resolve(res))
+      );
+    });
   }
 
   /**
   * Cancel a customer's subscription
   * @param {String} subscription Subscription id
-  * @param {Boolean} at_period_end Delay cancellation until end of period
+  * @param {Boolean} atPeriodEnd Delay cancellation until end of period
   * @returns {Promise}
   */
 
-  unsubscribe(subscription, at_period_end = false) {
+  unsubscribe(subscription, atPeriodEnd = false) {
     return new Promise((resolve, reject) => {
       this.getProvider().subscriptions.del(
         subscription,
-        { at_period_end },
-        (err, res) => err ? reject(err) : resolve(res)
-      )
+        { at_period_end: atPeriodEnd },
+        (err, res) => (err ? reject(err) : resolve(res))
+      );
     });
   }
 
@@ -133,9 +132,9 @@ export default class StripePayment extends BasePayment {
           customer,
           ..._config
         },
-        (err, res) => err ? reject(err) : resolve(res)
-      )
-    })
+        (err, res) => (err ? reject(err) : resolve(res))
+      );
+    });
   }
 
   /**
@@ -147,9 +146,9 @@ export default class StripePayment extends BasePayment {
     return new Promise((resolve, reject) => {
       this.getProvider().subscriptions.retrieve(
         subscription,
-        (err, res) => err ? reject(err) : resolve(res)
-      )
-    })
+        (err, res) => (err ? reject(err) : resolve(res))
+      );
+    });
   }
 
   /**
@@ -163,9 +162,9 @@ export default class StripePayment extends BasePayment {
       this.getProvider().subscriptions.update(
         subscription,
         _config,
-        (err, res) => err ? reject(err) : resolve(res)
-      )
-    })
+        (err, res) => (err ? reject(err) : resolve(res))
+      );
+    });
   }
 
   /**
@@ -176,7 +175,7 @@ export default class StripePayment extends BasePayment {
    * @returns {Promise}
    */
   charge(_token, _amount, _config = {}) {
-    let config = {
+    const config = {
       amount: _amount,
       currency: 'usd',
       capture: true,
@@ -187,7 +186,7 @@ export default class StripePayment extends BasePayment {
     return new Promise((resolve, reject) => {
       this.getProvider().charges.create(
         config,
-        (error, result) => error ? reject(error) : resolve(result)
+        (error, result) => (error ? reject(error) : resolve(result))
       );
     });
   }
@@ -202,10 +201,10 @@ export default class StripePayment extends BasePayment {
   chargeCard(_card, _amount, _config = {}) {
     return new Promise((resolve, reject) => {
       this.createCardToken(_card)
-        .then((result) => this.charge(result.id, _amount, _config))
-        .then((result) => resolve(result))
-        .catch((err) => reject(err))
-    })
+        .then(result => this.charge(result.id, _amount, _config))
+        .then(result => resolve(result))
+        .catch(err => reject(err));
+    });
   }
 
   /**
@@ -217,7 +216,7 @@ export default class StripePayment extends BasePayment {
     return new Promise((resolve, reject) => {
       this.getProvider().charges.retrieve(
         _transactionId,
-        (error, charge) => error ? reject(error) : resolve(charge)
+        (error, charge) => (error ? reject(error) : resolve(charge))
       );
     });
   }
@@ -231,7 +230,7 @@ export default class StripePayment extends BasePayment {
     return new Promise((resolve, reject) => {
       this.getProvider().refunds.create(
         { charge: _transactionId },
-        (error, refund) => error ? reject(error) : resolve(refund)
+        (error, refund) => (error ? reject(error) : resolve(refund))
       );
     });
   }
