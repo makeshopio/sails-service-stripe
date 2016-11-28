@@ -1,17 +1,13 @@
 import { assert } from 'chai';
-import PaymentService from '../../src/index';
+import StripeService from '../../src/index';
 import StripePayment from '../../src/StripePayment';
 
-describe('PaymentService', () => {
+describe('StripeService', () => {
   it('Should properly export', () => {
-    assert.isFunction(PaymentService);
+    assert.isFunction(StripeService);
   });
 
   it('Should properly create instance', () => {
-    assert.instanceOf(PaymentService('stripe', {}), StripePayment);
-  });
-
-  it('Should properly throw exception on create unrecognised', () => {
-    assert.throw(() => PaymentService('NOT_EXISTS'), Error);
+    assert.instanceOf(StripeService({}), StripePayment);
   });
 });
